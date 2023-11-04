@@ -86,10 +86,11 @@ vcf_path = "INPUT/VCF/Peru.joint150WG.vcf.gz"
 
 # Unknown clinical significance of high impact in protein coding regions:
 sql1 = "SELECT Chromosome,Chr_Start,Chr_End FROM 02_UP_VEP_EX_COMMON_VAR_1_CONSEQ WHERE IMPACT ='HIGH' AND CLIN_SIG = '-' AND BIOTYPE ='protein_coding'"
-
+sql2 = "INSERT INTO 03_ALT_ALLELE_POP_COUNT(LOCATION,CHOPCCAS,CUSCO,IQUITOS,MATZES,MOCHES,TRUJILLO,UROS) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}')"
 cursor.execute(sql1)
 
 results = cursor.fetchall()
+regions = {}
 for result in results:
     Chromosome = result['Chromosome']
     Chr_Start  = result['Chr_Start']
@@ -97,9 +98,15 @@ for result in results:
     region     = str(Chromosome) + ':' + str(Chr_Start) + "-" + str(Chr_End)
     #print(region,sep='\t')
     variant = count_alt_alleles(vcf_path, region)
-    print (region,variant)
-    
-    
+    if not region in regions:
+        regions[region] = 0
+        cursor.execute(sql2.format(*[region,variant['CHOPCCAS'],variant['CUSCO'],variant['IQUITOS'],variant['MATZES'],variant['MOCHES'],variant['TRUJILLO'],variant['UROS']]))
+        print (region,variant)
+    regions[region] +=1
+
+for loc in regions:
+    if regions[loc] > 1:    
+        print('Location with more than 1 VEP consequences: ',loc,regions[loc],sep='\t')    
 '''
 def count_alternative_alleles(vcf_filename):
     with open(vcf_filename, 'r') as vcf_file:
