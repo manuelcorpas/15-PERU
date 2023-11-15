@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS `peru`.`05_PGX_INSERT` ;
+
+CREATE TABLE IF NOT EXISTS `peru`.`05_PGX_INSERT` (
+            `GENE`    VARCHAR(20) NOT NULL,
+            `SAMPLE`  VARCHAR(50) NOT NULL,
+            `ALLELE`  VARCHAR(50) NOT NULL,
+            `EFFECT`  VARCHAR(500) NOT NULL,
+            PRIMARY KEY (`GENE`,`SAMPLE`)
+        )
+ENGINE = InnoDB;
