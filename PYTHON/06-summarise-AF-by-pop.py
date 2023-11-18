@@ -24,7 +24,7 @@ cursor = db.cursor(dictionary=True)
 
 sql1 = "SELECT SAMPLE,GENE,ALLELE,EFFECT FROM 05_PGX_INSERT"
 sql2 = "SELECT POPULATION FROM 00_SAMPLE WHERE ARRAY_CODE = '{0}'"
-
+sql3 = "INSERT INTO 06_SUMMARISE_AF_BY_POP(GENE,POPULATION,ALLELE,COUNTER) VALUES('{0}','{1}','{2}','{3}')"
 cursor.execute(sql1)
 pgx_effects = cursor.fetchall()
 
@@ -60,9 +60,11 @@ for g in gene:
     sorted_pop = sorted(gene[g].keys())
     for p in sorted_pop:
         for a in gene[g][p]:
-            print(g,p,a,gene[g][p][a],sep='\t')
+            input_row = [g,p,a,gene[g][p][a]]
+            cursor.execute(sql3.format(*input_row))
+            print(*input_row,sep='\t')
 
-
+db.commit()
 
 
 
