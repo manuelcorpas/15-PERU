@@ -35,11 +35,11 @@ def extract_and_print_data(root_directory):
         gene_name = os.path.basename(file).split('_UKBB_frequencies.tsv')[0]
         df = pd.read_csv(file, sep='\t')
         for index, row in df.iterrows():
-            print(gene_name,row.iloc[0],row.iloc[1],row.iloc[2], sep='\t')
-            #input_data = [pipeline_id,row.iloc[0],row.iloc[1],row.iloc[2]]
-            #cursor.execute(sql1.format(*input_data))
+            print(gene_name,row.iloc[0],row.iloc[1],row.iloc[2],row.iloc[3],row.iloc[4],sep='\t')
+            input_data = [gene_name,row.iloc[0],row.iloc[1].replace("'", ""),row.iloc[2],row.iloc[3],row.iloc[4]]
+            cursor.execute(sql1.format(*input_data))
 
-    #db.commit()
+    db.commit()
 
 # Example usage
 extract_and_print_data('INPUT/PHARMGKB/')
