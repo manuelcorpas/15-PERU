@@ -1,5 +1,7 @@
 import pandas as pd
 
+# This is to generate the ii_population for the PCA analysis, maximising the total number of genetic samples, 747 and their common variants.
+
 # Function to find repeating patterns (from the first file)
 def find_repeating_pattern_advanced(s, separator='_'):
     """
