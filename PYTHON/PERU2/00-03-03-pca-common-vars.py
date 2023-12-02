@@ -46,7 +46,7 @@ def plot_pca_results(pca_file, population_file):
 
     plt.xlabel('PC1')
     plt.ylabel('PC2')
-    plt.title('PCA of ARRAY & WGS Samples by Population')
+    plt.title('PCA Common Variants IBD Clean (747 Samples, 28 Populations)')
     plt.legend()
 
     # Adjust text positions

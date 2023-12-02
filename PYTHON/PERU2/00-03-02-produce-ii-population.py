@@ -37,6 +37,10 @@ with open(file_path_patterns, 'r') as file:
 # Path to your Excel file (second file)
 file_path_excel = 'ANALYSIS/03-SAMPLE-ANALYSIS/DemographicData_INS.xlsx'  # Replace with the actual path
 
+file_to_output = 'ANALYSIS/10-PCA/ii_population.txt'
+f = open(file_to_output, "w")
+f.write("IID\tFID\tPopulation\n")
+
 # Reading and processing the Excel file
 matched_patterns = set()
 try:
@@ -54,7 +58,7 @@ try:
                     etnia_value = 'MOCHES'
                 if '_' in array_code:
                       column1 = array_code + '_' + array_code + '_' + array_code + '_' + array_code
-                print(column1, etnia_value,sep='\t')
+                print(column1,column1,etnia_value,sep='\t',file=open(file_to_output,'a'))
             except KeyError:
                 # If '107 etnia' column is not found, print just the pattern
                 #print()
@@ -71,7 +75,7 @@ try:
             if '-' in pattern:
                 etnia_value = pattern.split('-')[0]
                 column1     = pattern + '_' + pattern
-                print(column1,etnia_value,sep='\t')
+                print(column1,column1,etnia_value,sep='\t',file=open(file_to_output,'a'))
     
 except Exception as e:
     print("Error reading Excel file:", e)
