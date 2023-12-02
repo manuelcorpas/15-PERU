@@ -58,9 +58,9 @@ def plot_pca_results(pca_file, population_file):
 
 
 def main():
-    vcf_file = 'ANALYSIS/09-PCA/common_variants.vcf.gz'
-    output_prefix = 'pca_output'
-    population_file = 'ANALYSIS/09-PCA/iid_population_file_concat.txt'  # Path to the file mapping samples to populations
+    vcf_file = 'ANALYSIS/10-PCA/common_variants_ibd_clean.vcf.gz'
+    output_prefix = 'ANALYSIS/10-PCA/pca_output'
+    population_file = 'ANALYSIS/10-PCA/ii_population.txt'  # Path to the file mapping samples to populations
 
     run_plink_pca(vcf_file, output_prefix)
     pca_file = f"{output_prefix}.eigenvec"
