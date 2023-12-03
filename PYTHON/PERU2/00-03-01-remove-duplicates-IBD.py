@@ -32,7 +32,7 @@ def run_ibd_analysis(plink_path, input_file, output_prefix):
     to_remove = set(duplicates['IID1'].tolist() + duplicates['IID2'].tolist())
 
     # Step 4: Write the list of individuals to a file with FID and IID being the same
-    with open('remove.txt', 'w') as f:
+    with open('09-IBD/to_remove.txt', 'w') as f:
         for iid in to_remove:
             f.write(f'{iid} {iid}\n')  # Writing IID as both FID and IID
 
@@ -40,7 +40,7 @@ def run_ibd_analysis(plink_path, input_file, output_prefix):
     remove_cmd = [
         plink_path,
         '--bfile', output_prefix,
-        '--remove', 'remove.txt',
+        '--remove', '09-IBD/to_remove.txt',
         '--make-bed',
         '--out', f'{output_prefix}_clean'
     ]

@@ -37,7 +37,7 @@ with open(file_path_patterns, 'r') as file:
 # Path to your Excel file (second file)
 file_path_excel = 'ANALYSIS/03-SAMPLE-ANALYSIS/DemographicData_INS.xlsx'  # Replace with the actual path
 
-file_to_output = 'ANALYSIS/10-PCA/ii_population.txt'
+file_to_output = 'ANALYSIS/10-PCA/ii_28_populations.txt'
 f = open(file_to_output, "w")
 f.write("IID\tFID\tPopulation\n")
 

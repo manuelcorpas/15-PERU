@@ -46,7 +46,7 @@ def plot_pca_results(pca_file, population_file):
 
     plt.xlabel('PC1')
     plt.ylabel('PC2')
-    plt.title('PCA Common Variants IBD Clean (747 Samples, 28 Populations)')
+    plt.title('PCA Common Variants IBD Clean (746 Samples, 28 Populations)')
     plt.legend()
 
     # Adjust text positions
@@ -60,7 +60,7 @@ def plot_pca_results(pca_file, population_file):
 def main():
     vcf_file = 'ANALYSIS/10-PCA/common_variants_ibd_clean.vcf.gz'
     output_prefix = 'ANALYSIS/10-PCA/pca_output'
-    population_file = 'ANALYSIS/10-PCA/ii_population.txt'  # Path to the file mapping samples to populations
+    population_file = 'ANALYSIS/10-PCA/ii_28_populations.txt'  # Path to the file mapping samples to populations
 
     run_plink_pca(vcf_file, output_prefix)
     pca_file = f"{output_prefix}.eigenvec"
