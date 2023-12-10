@@ -38,14 +38,14 @@ def plot_pca_results(pca_file, population_file):
 
     for pop in unique_pops:
         subset = merged_data[merged_data['Population'] == pop]
-        plt.scatter(subset['PC1'], subset['PC2'], label=pop, alpha=0.7)
+        plt.scatter(subset['PC3'], subset['PC4'], label=pop, alpha=0.7)
 
         # Calculate the centroid of each population group
-        centroid = subset[['PC1', 'PC2']].mean()
-        texts.append(plt.text(centroid['PC1'], centroid['PC2'], pop, fontsize=10, weight='bold'))
+        centroid = subset[['PC3', 'PC4']].mean()
+        texts.append(plt.text(centroid['PC3'], centroid['PC4'], pop, fontsize=10, weight='bold'))
 
-    plt.xlabel('PC1')
-    plt.ylabel('PC2')
+    plt.xlabel('PC3')
+    plt.ylabel('PC4')
     plt.title('PCA Common Variants IBD Clean (746 Samples, 28 Populations)')
     plt.legend()
 

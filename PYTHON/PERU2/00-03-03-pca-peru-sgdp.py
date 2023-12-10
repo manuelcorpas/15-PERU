@@ -69,19 +69,19 @@ def plot_pca_results(pca_file, population_file):
         print("Merged data is empty. Possible mismatch in IDs.")
         return
 
-    plt.figure(figsize=(20, 15))  # Increased plot size
+    plt.figure(figsize=(15, 12))  # Increased plot size
     unique_pops = sorted(merged_data['Population'].unique())
     texts = []
 
     for pop in unique_pops:
         subset = merged_data[merged_data['Population'] == pop]
-        plt.scatter(subset['PC1'], subset['PC2'], label=pop, alpha=0.7)
+        plt.scatter(subset['PC3'], subset['PC4'], label=pop, alpha=0.7)
 
-        centroid = subset[['PC1', 'PC2']].mean()
-        texts.append(plt.text(centroid['PC1'], centroid['PC2'], pop, fontsize=9, weight='bold'))
+        centroid = subset[['PC3', 'PC4']].mean()
+        texts.append(plt.text(centroid['PC3'], centroid['PC4'], pop, fontsize=9, weight='bold'))
 
-    plt.xlabel('PC1')
-    plt.ylabel('PC2')
+    plt.xlabel('PC3')
+    plt.ylabel('PC4')
     plt.title('PCA Peru (746 Samples, 28 Populations) SGDP (46 Samples, 24 Close Populations)')
     plt.legend()
     # Remove or adjust the legend
@@ -109,7 +109,7 @@ def main():
     output_prefix = 'ANALYSIS/12-SGDP/pca_output'
     population_file = 'ANALYSIS/12-SGDP/sgdp-peru-sample-ids-population-ids-24-SDGP-24-close-pops.txt'  # Path to the file mapping samples to populations
 
-    run_plink_pca(vcf_file, output_prefix)
+    #run_plink_pca(vcf_file, output_prefix)
     pca_file = f"{output_prefix}.eigenvec"
 
     if os.path.exists(pca_file):
