@@ -10,9 +10,9 @@ vcf_file_path = 'ANALYSIS/10-PCA/common_variants_ibd_clean.vcf.gz'
 plink_executable_path = 'plink'  # if PLINK is used for conversion
 admixture_executable_path = 'admixture'
 plink_format_output = 'ANALYSIS/11-ADMIXTURE/common_variants_ibd_clean'
-K=3
+K=6
 
-# Read ADMIXTURE output (assuming K=3)
+# Read ADMIXTURE output (assuming K=6) common_variants_ibd_clean_pruned.6.Q
 admixture_output_file = plink_format_output+'_pruned.' + str(K) + '.Q'
 admixture_data = pd.read_csv(admixture_output_file, header=None, sep='\s+')
 
@@ -38,7 +38,7 @@ merged_data.dropna(subset=numeric_columns, inplace=True)
 grouped_data = merged_data.groupby('Population')[numeric_columns].mean()
 
 # Specify the ancestry column to sort by (e.g., the first ancestry column)
-sort_ancestry = numeric_columns[0]  # Adjust this if necessary
+sort_ancestry = numeric_columns[5]  # Adjust this if necessary
 
 # Sort the populations based on the chosen ancestry
 grouped_data = grouped_data.sort_values(by=sort_ancestry, ascending=False)
