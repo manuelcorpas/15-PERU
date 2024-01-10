@@ -7,3 +7,6 @@ YML/*
 *.swp
 INPUT/*
 PYTHON/ARCHIVE/*
+.*
+myenv/*
+
