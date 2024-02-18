@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS `peru`.`03_00_VEP_WGS`;
+DROP TABLE IF EXISTS `peru`.`00_04_VEP_WGS`;
 
-CREATE TABLE IF NOT EXISTS `peru`.`03_00_VEP_WGS` (
+CREATE TABLE IF NOT EXISTS `peru`.`00_04_VEP_WGS` (
     `id`                INT NOT NULL AUTO_INCREMENT,
     `Chromosome`        VARCHAR(40) NOT NULL,
     `Chr_position`      INT NOT NULL,

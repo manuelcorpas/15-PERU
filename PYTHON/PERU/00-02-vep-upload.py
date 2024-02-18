@@ -1,4 +1,9 @@
 import csv
+import ctypes
+
+# Path to the MariaDB library
+lib_path = '/opt/homebrew/lib/libmariadb.3.dylib'
+mariadb_lib = ctypes.CDLL(lib_path)
 import mariadb
 import glob
 import os
@@ -36,7 +41,7 @@ def process_file(file_path, cursor):
         headers = [header.lstrip('#') for header in headers if header != 'PUBMED']
 
         sql_columns = ', '.join(headers)
-        sql_insert_base = f"INSERT INTO 02_VEP_UPLOAD ({sql_columns}) VALUES "
+        sql_insert_base = f"INSERT INTO 00_02_VEP_WGS ({sql_columns}) VALUES "
 
         for row_index, row in enumerate(reader, start=1):
             # Exclude the 'PUBMED' value from each row
@@ -60,7 +65,7 @@ def process_file(file_path, cursor):
             except mariadb.Error as e:
                 print(f"Error inserting data at row {row_index}: {e}")
 
-os.chdir("ANALYSIS/VEP/TXT/")
+os.chdir("INPUT/VEP/WGS_DATA/")
 
 for file in glob.glob("*.txt"):
     print(Path(file).stem)

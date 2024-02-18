@@ -21,7 +21,7 @@ def parse_vcf_file(file_path, db):
 
             # Insert into database
             try:
-                cursor.execute("INSERT INTO 02_WGS_VCF_UPLOAD (Chromosome, Chr_position, REF, ALT, ZYG) VALUES (?, ?, ?, ?, ?)", 
+                cursor.execute("INSERT INTO 00_03_WGS_VCF_UPLOAD (Chromosome, Chr_position, REF, ALT, ZYG) VALUES (?, ?, ?, ?, ?)", 
                                (chromosome, position, ref, alt, zyg))
             except mariadb.Error as e:
                 print(f"Error inserting data: {e}")
