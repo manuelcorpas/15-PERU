@@ -47,8 +47,11 @@ sql1="SELECT Location,Allele,Consequence,IMPACT,SYMBOL,BIOTYPE,Existing_variatio
     +"FROM 00_02_VEP_WGS WHERE Location = '{0}' AND Allele = '{1}' "
 insert_statement = ("INSERT INTO `peru`.`00_04_VEP_WGS` (`Chromosome`, `Chr_position`, `REF`, `ALT`, `Consequence`, `IMPACT`, `SYMBOL`, `BIOTYPE`, `Existing_variation`, `SIFT`, `PolyPhen`, `AF`, `CLIN_SIG`, `CADD_PHRED`, `LOEUF`, `ZYG`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
 
+with open('ANALYSIS/VEP/TXT/failed_vcf_lines_v2.txt', 'w') as failed_file:
+    failed_file.write('')  # This will clear the file or create it if it doesn't exist
 
-file = "ANALYSIS/02-PGEN-PSAM-PVAR-2-VCF/Peru.joint.vcf"
+
+file = "INPUT/VCF/Peru.joint.vcf"
 count = 0
 
 severity_ranking = {
@@ -126,6 +129,34 @@ severity_ranking = {
     'intergenic_variant': 65
 }
 
+
+import traceback
+
+def update_or_insert_record(data, failed_file_path='ANALYSIS/VEP/TXT/failed_vcf_lines_v2.txt'):
+    Chromosome, Chr_position, REF, ALT, consequence, *_ = data
+    new_consequence_score = severity_ranking.get(consequence, float('inf'))
+
+    try:
+        # Use 'ALT' instead of 'Allele' based on your table schema
+        cursor.execute("SELECT Consequence FROM `00_04_VEP_WGS` WHERE Chromosome = %s AND Chr_position = %s AND REF = %s AND ALT = %s", (Chromosome, Chr_position, REF, ALT))
+        existing_record = cursor.fetchone()
+
+        if existing_record:
+            existing_consequence_score = severity_ranking.get(existing_record['Consequence'], float('inf'))
+            if new_consequence_score < existing_consequence_score:
+                # Update the existing record; ensure the SQL matches your table schema
+                cursor.execute("UPDATE `00_04_VEP_WGS` SET Consequence=%s, IMPACT=%s, SYMBOL=%s, BIOTYPE=%s, Existing_variation=%s, SIFT=%s, PolyPhen=%s, AF=%s, CLIN_SIG=%s, CADD_PHRED=%s, LOEUF=%s, ZYG=%s WHERE Chromosome = %s AND Chr_position = %s AND REF = %s AND ALT = %s", 
+                               (consequence, data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], Chromosome, Chr_position, REF, ALT))
+        else:
+            # Insert new record
+            cursor.execute(insert_statement, data)
+    except Exception as e:
+        # Log the detailed error and traceback
+        error_details = traceback.format_exc()
+        print(f"Error: {e}\nDetails: {error_details}")
+        with open(failed_file_path, 'a') as failed_file:
+            failed_file.write(f"Failed to process record for Chromosome: {Chromosome}, Position: {Chr_position}, REF: {REF}, ALT: {ALT}, Error: {e}\nDetails: {error_details}\n")
+
 def process_line(parts):
     Chromosome   = parts[0]
     Chr_position = parts[1]
@@ -138,38 +169,21 @@ def process_line(parts):
     cursor.execute(query)
     results = cursor.fetchall()
 
-    # Process results and insert into the database
-    top_result = None
-    min_severity_rank = float('inf')
     for result in results:
-        consequence = result['Consequence']
-        consequence_severities = [severity_ranking.get(c.strip(), float('inf')) for c in consequence.split(',')]
-        highest_severity = min(consequence_severities)
-        if highest_severity < min_severity_rank:
-            min_severity_rank = highest_severity
-            top_result = result
+        try:
+            consequence = result['Consequence']
+            consequence_severities = [(severity_ranking.get(c.strip(), float('inf')), c.strip()) for c in consequence.split(',')]
+            top_consequence = min(consequence_severities, key=lambda x: x[0])[1]  # Select the top-ranked consequence
+            result['Consequence'] = top_consequence  # Update result with the top-ranked consequence
 
-    if top_result:
-        location = top_result['Location']
-        allele = top_result['Allele']
-        consequence = top_result['Consequence']
-        impact = top_result['IMPACT']
-        symbol = top_result['SYMBOL']
-        biotype = top_result['BIOTYPE']
-        existing_variation = top_result['Existing_variation']
-        sift = top_result['SIFT']
-        polyphen = top_result['PolyPhen']
-        af = top_result['AF']
-        clin_sig = top_result['CLIN_SIG']
-        cadd_phred = top_result['CADD_PHRED']
-        loeuf = top_result['LOEUF']
+            # Prepare the data for insertion or update
+            data = (Chromosome, Chr_position, REF, ALT, top_consequence, result['IMPACT'], result['SYMBOL'], result['BIOTYPE'], result['Existing_variation'], result['SIFT'], result['PolyPhen'], result['AF'], result['CLIN_SIG'], result['CADD_PHRED'], result['LOEUF'], zyg)
 
-        data = (Chromosome, Chr_position, REF, ALT, consequence, impact, symbol, biotype, existing_variation, sift, polyphen, af, clin_sig, cadd_phred, loeuf, zyg)
-        cursor.execute(insert_statement, data)
-        print(data)
-    else:
-        with open('ANALYSIS/VEP/TXT/failed_vcf_lines_v2.txt', 'a') as failed_file:
-            failed_file.write('\t'.join(parts) + '\n')
+            # Use the new function to decide whether to insert or update
+            update_or_insert_record(data)
+        except KeyError as e:
+            # Handle cases where a KeyError occurs
+            print(f"Error processing line: {e}")
 
 with open(file, 'r') as file:
     for line in file:
