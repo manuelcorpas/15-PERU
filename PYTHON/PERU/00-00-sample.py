@@ -19,7 +19,7 @@ except mariadb.Error as e:
 
 cursor = db.cursor(dictionary=True)
 
-sql1 = "INSERT INTO 00_SAMPLE(ARRAY_CODE,INTERNAL_CODE,POPULATION,DEPARTMENT,STATUS) VALUES('{0}','{1}','{2}','{3}','{4}')"
+sql1 = "INSERT INTO 00_00_SAMPLE(ARRAY_CODE,INTERNAL_CODE,POPULATION,DEPARTMENT,STATUS) VALUES('{0}','{1}','{2}','{3}','{4}')"
 
 os.chdir("INPUT/SAMPLES")
 file = "DemographicData_INS.csv"

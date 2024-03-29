@@ -85,8 +85,8 @@ def count_alt_alleles(vcf_path, region):
 vcf_path = "INPUT/VCF/Peru.joint150WG.vcf.gz"
 
 # Unknown clinical significance of high impact in protein coding regions:
-sql1 = "SELECT Chromosome,Chr_Start,Chr_End,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG FROM 02_UP_VEP_EX_COMMON_VAR_1_CONSEQ WHERE IMPACT ='HIGH' AND BIOTYPE ='protein_coding'"
-sql2 = "INSERT INTO 03_ALT_ALLELE_POP_COUNT(LOCATION,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG,CHOPCCAS,CUSCO,IQUITOS,MATZES,MOCHES,TRUJILLO,UROS) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}')"
+sql1 = "SELECT Chromosome,Chr_position,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG FROM 00_04_VEP_WGS_HIGH_IMPACT WHERE CLIN_SIG NOT like '%benign%'"
+sql2 = "INSERT INTO 00_05_ALT_ALLELE_POP_COUNT(LOCATION,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG,CHOPCCAS,CUSCO,IQUITOS,MATZES,MOCHES,TRUJILLO,UROS) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}')"
 cursor.execute(sql1)
 
 results = cursor.fetchall()
@@ -104,7 +104,7 @@ for result in results:
     variant = count_alt_alleles(vcf_path, region)
     if not region in regions:
         regions[region] = 0
-        cursor.execute(sql2.format(*[region,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG,variant['CHOPCCAS'],variant['CUSCO'],variant['IQUITOS'],variant['MATZES'],variant['MOCHES'],variant['TRUJILLO'],variant['UROS']]))
+        #cursor.execute(sql2.format(*[region,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG,variant['CHOPCCAS'],variant['CUSCO'],variant['IQUITOS'],variant['MATZES'],variant['MOCHES'],variant['TRUJILLO'],variant['UROS']]))
         print (region,variant)
     regions[region] +=1
 
