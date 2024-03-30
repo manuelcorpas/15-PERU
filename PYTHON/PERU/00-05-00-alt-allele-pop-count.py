@@ -7,79 +7,91 @@
 # The script counts alternative alleles for those coordinates that are queried from the database
 
 
-import mariadb
+import pymysql  # Replace 'import mariadb' with this
 import glob, os
 from pathlib import Path
 import configparser
 import re
-import pysam
 import sys
+import pysam
 
-config   = configparser.ConfigParser()
+config = configparser.ConfigParser()
 config.read_file(open(r'CONF/mariadb.conf'))
 
 try:
-    db = mariadb.connect(
-        host   = config.get('peru','host'),
-        user   = config.get('peru','user'     ),
-        passwd = config.get('peru','password' ),
-        db     = config.get('peru','database'))
+    db = pymysql.connect(
+        host=config.get('peru', 'host'),
+        user=config.get('peru', 'user'),
+        password=config.get('peru', 'password'),  # 'passwd' is changed to 'password'
+        database=config.get('peru', 'database')  # 'db' is changed to 'database'
+    )
 
-except mariadb.Error as e:
+except pymysql.Error as e:  # 'mariadb.Error' is changed to 'pymysql.Error'
     print(f"Error connecting to MariaDB Platform: {e}")
     sys.exit(1)
 
-
-db.autocommit = True
-cursor = db.cursor(dictionary=True)
+db.autocommit(True)  # 'db.autocommit = True' is changed to 'db.autocommit(True)'
+cursor = db.cursor(pymysql.cursors.DictCursor)  # 'dictionary=True' is changed to 'pymysql.cursors.DictCursor'
 
 def count_alt_alleles(vcf_path, region):
     """
-    Counts alternative alleles per sample in a specified region of a VCF file.
-    
+    Counts alternative alleles per sample in a specified region of a VCF file using tabix.
+
     Parameters:
     - vcf_path: str, path to the VCF file
     - region: str, specific region in format 'chr:start-end'
     """
     try:
-        # Open the VCF file
-        vcf_file = pysam.VariantFile(vcf_path)
-        
-        # Extract the samples
-        samples = vcf_file.header.samples
-        
-        # Dictionary to hold the counts of alternative alleles per sample
-        alt_allele_counts = {sample: 0 for sample in samples}
-        
-        # Fetch the variants in the specified region
-        for variant in vcf_file.fetch(region=region):
-            for sample, sample_data in variant.samples.items():
-                # Count alternative alleles
-                if sample_data.alleles:
-                    alt_alleles = [allele for allele in sample_data.alleles if allele != variant.ref]
-                    alt_allele_counts[sample] += len(alt_alleles)
-        
-        results = {}
- 
+        # Initialize a dictionary to hold the counts of alternative alleles per sample
+        alt_allele_counts = {}
+
+        # Open the VCF file with Tabix
+        vcf = pysam.TabixFile(vcf_path)
+
+        # Extract the sample names from the VCF file's header
+        header = vcf.header
+        samples = [line for line in header if line.startswith('#CHROM')][0].strip().split('\t')[9:]
+
+        # Initialize counts for each sample
+        for sample in samples:
+            alt_allele_counts[sample] = 0
+
+        # Fetch the specified region
+        for record in vcf.fetch(region=region):
+            parts = record.strip().split('\t')
+
+            # Extract the genotype information for each sample
+            genotypes = parts[9:]
+
+            # Iterate through the genotypes and count alternative alleles
+            for i, genotype in enumerate(genotypes):
+                # Extract the genotype information
+                genotype_parts = re.split(r'[/|]', genotype.split(':')[0])
+
+                # Count the alternative alleles
+                alt_allele_count = genotype_parts.count('1')
+
+                # Update the counts dictionary
+                alt_allele_counts[samples[i]] += alt_allele_count
+
+        vcf.close()
+
         # Output the results
+        results = {}
         for sample, count in alt_allele_counts.items():
             parts = sample.split('-')
             Population = parts[0]
-            Sample_no  = parts[1]
-            if not Population in results:
+            Sample_no = parts[1]
+            if Population not in results:
                 results[Population] = 0
             results[Population] += count
-            #print(region,end='\t')       
-            #print(f"{Population}\t{Sample_no}: {count}")
-            
-        #for pop in results:
-        #    print(f"{region}\t{pop}\t{results[pop]}")
-        return results;
-        # Close the VCF file
-        vcf_file.close()
-        
+
+        # Return the aggregated counts by population
+        return results
+
     except Exception as e:
         print(f"An error occurred: {e}", file=sys.stderr)
+
 
 # Peru.joint150WG.vcf.gz
 vcf_path = "INPUT/VCF/Peru.joint150WG.vcf.gz"
@@ -93,18 +105,18 @@ results = cursor.fetchall()
 regions = {}
 for result in results:
     Chromosome = result['Chromosome']
-    Chr_Start  = result['Chr_Start']
-    Chr_End    = result['Chr_End']
+    Chr_Start  = result['Chr_position']
+    Chr_End    = result['Chr_position']
     SYMBOL      = result['SYMBOL']
     CADD_PHRED  = result['CADD_PHRED']
     Consequence = result['Consequence']
     CLIN_SIG    = result['CLIN_SIG']
     region     = str(Chromosome) + ':' + str(Chr_Start) + "-" + str(Chr_End)
-    #print(region,sep='\t')
+    print(region,sep='\t')
     variant = count_alt_alleles(vcf_path, region)
     if not region in regions:
         regions[region] = 0
-        #cursor.execute(sql2.format(*[region,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG,variant['CHOPCCAS'],variant['CUSCO'],variant['IQUITOS'],variant['MATZES'],variant['MOCHES'],variant['TRUJILLO'],variant['UROS']]))
+        cursor.execute(sql2.format(*[region,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG,variant['CHOPCCAS'],variant['CUSCO'],variant['IQUITOS'],variant['MATZES'],variant['MOCHES'],variant['TRUJILLO'],variant['UROS']]))
         print (region,variant)
     regions[region] +=1
 

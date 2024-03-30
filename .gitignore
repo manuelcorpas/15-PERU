@@ -8,5 +8,5 @@ YML/*
 INPUT/*
 PYTHON/ARCHIVE/*
 .*
-myenv/*
+my_new_env/*
 SQL/03_00_VEP_WGSdump_v2.txt
