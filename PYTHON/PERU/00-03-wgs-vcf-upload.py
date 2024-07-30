@@ -1,3 +1,44 @@
+'''
+The code below or an adaptation of it needs to be used for it to successfully connect to mariadb
+
+import mysql.connector
+import configparser
+import sys
+import os
+import glob
+from pathlib import Path 
+# Reading database configuration
+config = configparser.ConfigParser()
+config.read_file(open(r'CONF/mariadb.conf'))
+
+# Connecting to the database with explicit charset and collation
+try:
+    db = mysql.connector.connect(
+        host=config.get('peru', 'host'),
+        user=config.get('peru', 'user'),
+        password=config.get('peru', 'password'),
+        database=config.get('peru', 'database'),
+        charset='utf8mb4',
+        collation='utf8mb4_general_ci'
+    )
+except mysql.connector.Error as e:
+    print(f"Error connecting to MariaDB Platform: {e}")
+    sys.exit(1)
+
+db.autocommit = True
+cursor = db.cursor()
+
+# Explicitly set collation for the connection
+try:
+    cursor.execute("SET collation_connection = 'utf8mb4_general_ci'")
+except mysql.connector.Error as e:
+    print(f"Error setting collation: {e}")
+    sys.exit(1)
+
+'''
+
+
+
 import mariadb
 import glob
 import os

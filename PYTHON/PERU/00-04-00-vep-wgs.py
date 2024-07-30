@@ -1,8 +1,39 @@
+# Assigns VEP annotation to biallelic SNPs
+
+
+import mysql.connector
+import configparser
 import sys
-import mariadb
-import glob
 import os
-from pathlib import Path
+import glob
+from pathlib import Path 
+# Reading database configuration
+config = configparser.ConfigParser()
+config.read_file(open(r'CONF/mariadb.conf'))
+
+# Connecting to the database with explicit charset and collation
+try:
+    db = mysql.connector.connect(
+        host=config.get('peru', 'host'),
+        user=config.get('peru', 'user'),
+        password=config.get('peru', 'password'),
+        database=config.get('peru', 'database'),
+        charset='utf8mb4',
+        collation='utf8mb4_general_ci'
+    )
+except mysql.connector.Error as e:
+    print(f"Error connecting to MariaDB Platform: {e}")
+    sys.exit(1)
+
+db.autocommit = True
+cursor = db.cursor()
+
+# Explicitly set collation for the connection
+try:
+    cursor.execute("SET collation_connection = 'utf8mb4_general_ci'")
+except mysql.connector.Error as e:
+    print(f"Error setting collation: {e}")
+    sys.exit(1)
 
 # Function to process multiallelic sites
 def process_multiallelic_site(line):
@@ -30,16 +61,6 @@ def process_multiallelic_site(line):
 
     return biallelic_lines
 
-# Establish a connection to MariaDB database
-try:
-    db = mariadb.connect(
-        host='localhost',
-        user='admin',
-        password='root',  # Fill in your password here
-        database='peru')
-except mariadb.Error as e:
-    print(f"Error connecting to MariaDB: {e}")
-    sys.exit(1)
 
 db.autocommit = True
 cursor = db.cursor(dictionary=True)
