@@ -1,33 +1,41 @@
 import csv
 import ctypes
 
-# Path to the MariaDB library
-lib_path = '/opt/homebrew/lib/libmariadb.3.dylib'
-mariadb_lib = ctypes.CDLL(lib_path)
-import mariadb
-import glob
-import os
-from pathlib import Path
+import mysql.connector
 import configparser
 import sys
-
+import os
+import glob
+from pathlib import Path 
 # Reading database configuration
 config = configparser.ConfigParser()
 config.read_file(open(r'CONF/mariadb.conf'))
 
-# Connecting to the database
+# Connecting to the database with explicit charset and collation
 try:
-    db = mariadb.connect(
+    db = mysql.connector.connect(
         host=config.get('peru', 'host'),
         user=config.get('peru', 'user'),
-        passwd=config.get('peru', 'password'),
-        db=config.get('peru', 'database'))
-except mariadb.Error as e:
+        password=config.get('peru', 'password'),
+        database=config.get('peru', 'database'),
+        charset='utf8mb4',
+        collation='utf8mb4_general_ci'
+    )
+except mysql.connector.Error as e:
     print(f"Error connecting to MariaDB Platform: {e}")
     sys.exit(1)
 
 db.autocommit = True
 cursor = db.cursor()
+
+# Explicitly set collation for the connection
+try:
+    cursor.execute("SET collation_connection = 'utf8mb4_general_ci'")
+except mysql.connector.Error as e:
+    print(f"Error setting collation: {e}")
+    sys.exit(1)
+
+# The rest of your code...
 
 def truncate_value(value, max_length):
     """Truncate the value to a specified max length."""
@@ -65,7 +73,8 @@ def process_file(file_path, cursor):
             except mariadb.Error as e:
                 print(f"Error inserting data at row {row_index}: {e}")
 
-os.chdir("INPUT/VEP/WGS_DATA/")
+path ='/Users/manuelcorpas1/CloudDocs/PERU/HEINNER-GUIO/ANALYSIS/VEP/TXT/SPLIT'
+os.chdir(path)
 
 for file in glob.glob("*.txt"):
     print(Path(file).stem)

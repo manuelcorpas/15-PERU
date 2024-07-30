@@ -14,6 +14,8 @@ import configparser
 import re
 import sys
 import pysam
+import requests
+import json
 
 config = configparser.ConfigParser()
 config.read_file(open(r'CONF/mariadb.conf'))
@@ -92,13 +94,34 @@ def count_alt_alleles(vcf_path, region):
     except Exception as e:
         print(f"An error occurred: {e}", file=sys.stderr)
 
+def query_gnomad_af_by_hgvs(chrom, pos, ref, alt):
+    hgvs_id = f"chr{chrom}:g.{pos}{ref}>{alt}"
+    url = "http://myvariant.info/v1/variant/" + hgvs_id
+    params = {'fields': 'gnomad_genome.af,gnomad_genome.an,gnomad_genome.an_amr'}
+    response = requests.get(url, params=params)
+    if response.ok:
+        data = response.json()
+        gnomad_data = data.get('gnomad_genome', {})
+        gnomad_af = gnomad_data.get('af')
+        gnomad_an = gnomad_data.get('an')
+        return gnomad_af, gnomad_an
+    else:
+        return "Error querying MyVariant.info", None
+
+
 
 # Peru.joint150WG.vcf.gz
 vcf_path = "INPUT/VCF/Peru.joint150WG.vcf.gz"
 
 # Unknown clinical significance of high impact in protein coding regions:
-sql1 = "SELECT Chromosome,Chr_position,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG FROM 00_04_VEP_WGS_HIGH_IMPACT WHERE CLIN_SIG NOT like '%benign%'"
-sql2 = "INSERT INTO 00_05_ALT_ALLELE_POP_COUNT(LOCATION,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG,CHOPCCAS,CUSCO,IQUITOS,MATZES,MOCHES,TRUJILLO,UROS) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}')"
+sql1 = "SELECT Chromosome,Chr_position,REF,ALT,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG FROM 00_04_VEP_WGS_HIGH_IMPACT WHERE CLIN_SIG NOT like '%benign%'"
+sql2 = """
+INSERT INTO 00_05_ALT_ALLELE_POP_COUNT(
+    LOCATION, REF, ALT, SYMBOL, CADD_PHRED, Consequence, CLIN_SIG,
+    CHOPCCAS, CUSCO, IQUITOS, MATZES, MOCHES, TRUJILLO, UROS,
+    GNOMAD_AF, GNOMAD_AF_AMR, GNOMAD_AN, GNOMAD_AN_AMR
+) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+"""
 cursor.execute(sql1)
 
 results = cursor.fetchall()
@@ -107,18 +130,40 @@ for result in results:
     Chromosome = result['Chromosome']
     Chr_Start  = result['Chr_position']
     Chr_End    = result['Chr_position']
+    REF        = result['REF']
+    ALT         = result['ALT']
     SYMBOL      = result['SYMBOL']
     CADD_PHRED  = result['CADD_PHRED']
     Consequence = result['Consequence']
     CLIN_SIG    = result['CLIN_SIG']
     region     = str(Chromosome) + ':' + str(Chr_Start) + "-" + str(Chr_End)
-    print(region,sep='\t')
     variant = count_alt_alleles(vcf_path, region)
+    af,af_amr,an,an_amr = '','','',''
     if not region in regions:
         regions[region] = 0
-        cursor.execute(sql2.format(*[region,SYMBOL,CADD_PHRED,Consequence,CLIN_SIG,variant['CHOPCCAS'],variant['CUSCO'],variant['IQUITOS'],variant['MATZES'],variant['MOCHES'],variant['TRUJILLO'],variant['UROS']]))
-        print (region,variant)
-    regions[region] +=1
+
+        gnomad_af, gnomad_an = query_gnomad_af_by_hgvs(Chromosome, Chr_Start, REF, ALT)
+        if isinstance(gnomad_af, dict):
+            af = gnomad_af.get('af')  # If 'af' is not present, None is returned
+            af_amr = gnomad_af.get('af_amr')  # Similarly, None if 'af_amr' is not present
+        else:
+            af, af_amr = None, None  # Set to None to handle as SQL NULL
+
+        if isinstance(gnomad_an, dict):
+            an = gnomad_an.get('an')  # None if 'an' is not present
+            an_amr = gnomad_an.get('an_amr') # None if 'an_amr' is not present
+        else:
+            an = None  # Set to None to handle as SQL NULL
+            an_amr = None  # Set to None to handle as SQL NULL
+
+
+        query_params = (region, REF, ALT, SYMBOL, CADD_PHRED, Consequence, CLIN_SIG, variant['CHOPCCAS'], variant['CUSCO'], variant['IQUITOS'], variant['MATZES'], variant['MOCHES'], variant['TRUJILLO'], variant['UROS'], af, af_amr, an, an_amr)
+        print(query_params)
+
+        # Execute the query with parameters
+        cursor.execute(sql2, query_params)
+        regions[region] += 1
+
 
 for loc in regions:
     if regions[loc] > 1:    
