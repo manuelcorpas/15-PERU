@@ -1,6 +1,6 @@
 USE `peru`;
 
-DROP TABLE IF EXISTS `peru`.`00_02_VEP_WGS` ;
+DROP TABLE IF EXISTS `peru`.`00_02_VEP_WGS`;
 
 CREATE TABLE 00_02_VEP_WGS (
     ID INT AUTO_INCREMENT PRIMARY KEY,
@@ -23,7 +23,9 @@ CREATE TABLE 00_02_VEP_WGS (
     Protein_position VARCHAR(255),
     Amino_acids VARCHAR(255),
     Codons VARCHAR(255),
-    Existing_variation VARCHAR(500),
+    Existing_variation VARCHAR(2000),
+    REF_ALLELE VARCHAR(255),            -- New column
+    UPLOADED_ALLELE VARCHAR(255),       -- New column
     DISTANCE VARCHAR(255),
     STRAND VARCHAR(255),
     FLAGS VARCHAR(255),
@@ -43,7 +45,6 @@ CREATE TABLE 00_02_VEP_WGS (
     gnomADg_NFE_AF VARCHAR(255),
     gnomADg_OTH_AF VARCHAR(255),
     gnomADg_SAS_AF VARCHAR(255),
-    FREQS VARCHAR(255),
     CLIN_SIG VARCHAR(255),
     SOMATIC VARCHAR(255),
     PHENO VARCHAR(255),
@@ -52,13 +53,14 @@ CREATE TABLE 00_02_VEP_WGS (
     HIGH_INF_POS VARCHAR(255),
     MOTIF_SCORE_CHANGE VARCHAR(255),
     TRANSCRIPTION_FACTORS VARCHAR(255),
-    CADD_PHRED VARCHAR(255),
-    CADD_RAW VARCHAR(255),
-    LOEUF VARCHAR(255),
+    LOEUF VARCHAR(255),                 -- New column
+    CADD_PHRED VARCHAR(255),            -- New column
+    CADD_RAW VARCHAR(255),              -- New column
+    am_class VARCHAR(255),              -- New column
+    am_pathogenicity VARCHAR(255),      -- New column
     INDEX(Location),
     INDEX(IMPACT),
     INDEX(SYMBOL)
 )
 ENGINE = InnoDB;
-
 
