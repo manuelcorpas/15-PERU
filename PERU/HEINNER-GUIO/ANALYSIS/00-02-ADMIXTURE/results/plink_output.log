@@ -1,0 +1,18 @@
+PLINK v1.90b6.24 64-bit (6 Jun 2021)
+Options in effect:
+  --allow-extra-chr
+  --make-bed
+  --out /Users/superintelligent2/Library/Mobile Documents/com~apple~CloudDocs/PERU/HEINNER-GUIO/PERU/HEINNER-GUIO/ANALYSIS/00-02-ADMIXTURE/results/plink_output
+  --vcf /Users/superintelligent2/Library/Mobile Documents/com~apple~CloudDocs/PERU/HEINNER-GUIO/PERU/HEINNER-GUIO/ANALYSIS/00-02-ADMIXTURE/Peru.joint.biallelic_snps.vcf.gz
+
+Hostname: iMac-39887.local
+Working directory: /Users/superintelligent2/Library/Mobile Documents/com~apple~CloudDocs/PERU/HEINNER-GUIO
+Start time: Sun Dec  8 11:35:59 2024
+
+Random number seed: 1733657759
+32768 MB RAM detected; reserving 16384 MB for main workspace.
+Error: Failed to open /Users/superintelligent2/Library/Mobile
+Documents/com~apple~CloudDocs/PERU/HEINNER-GUIO/PERU/HEINNER-GUIO/ANALYSIS/00-02-ADMIXTURE/Peru.joint.biallelic_snps.vcf.gz.
+(--vcf expects a complete filename; did you forget '.vcf' at the end?)
+
+End time: Sun Dec  8 11:35:59 2024
