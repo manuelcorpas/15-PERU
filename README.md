@@ -1,6 +1,4 @@
-Below is an example **“Scripts Documentation”** section you can include in your GitHub repository. It explains how each Python script in `PYTHON/` relates to the analyses, figures, and methods described in your paper, *“Genome Interpretation of Peruvian Inca Empire Descendants Reveals Actionable Insights.”* You can copy and paste this directly into your repo’s README or a dedicated `PYTHON/README.md` file. Feel free to adjust references to specific figures, tables, or supplementary materials if you used them differently.
 
----
 
 # Scripts Documentation for the Paper:
 **Genome Interpretation of Peruvian Inca Empire Descendants Reveals Actionable Insights**
