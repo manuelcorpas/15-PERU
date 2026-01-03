@@ -156,7 +156,7 @@ admixture_data = {
     'AREQUIPA': {'altiplano': 0.437996, 'amazonian': 0.026133, 'european': 0.506247, 'northern_andean': 0.016235, 'african': 0.013389},
     'LIMA': {'altiplano': 0.352586, 'amazonian': 0.088634, 'european': 0.322483, 'northern_andean': 0.213226, 'african': 0.023071},
     'HUARAZ': {'altiplano': 0.392404, 'amazonian': 0.093215, 'european': 0.182882, 'northern_andean': 0.328893, 'african': 0.002607},
-    'AFRODESCENDANTS': {'altiplano': 0.129592, 'amazonian': 0.036752, 'european': 0.079208, 'northern_andean': 0.086718, 'african': 0.667730},
+    'Afrodescendents': {'altiplano': 0.129592, 'amazonian': 0.036752, 'european': 0.079208, 'northern_andean': 0.086718, 'african': 0.667730},
 }
 
 # Ancestry colors - matching Figure 4 ADMIXTURE plot (K=5)
@@ -179,7 +179,7 @@ ADMIX_KEY_MAP = {
     'Arequipa': 'AREQUIPA', 'Moches': 'MOCHES', 'Tallan': 'TALLAN',
     'Trujillo': 'TRUJILLO', 'Lima': 'LIMA', 'Lambayeque': 'LAMBAYEQUE',
     'Tumbes': 'TUMBES', 'Tacna': 'TACNA', 'Moquegua': 'MOQUEGUA',
-    'Afrodescendants': 'AFRODESCENDANTS',
+    'Afrodescendents': 'Afrodescendents',
 }
 
 def draw_pie_chart(ax, lon, lat, proportions, colors, radius=0.35, edgecolor='black', linewidth=0.5):
@@ -334,7 +334,7 @@ populations = pd.DataFrame([
     # ==========================================================================
     # AFRO-PERUVIAN
     # ==========================================================================
-    {"name": "Afrodescendants", "lat": -13.45, "lon": -76.15, "region": "Coastal", 
+    {"name": "Afrodescendents", "lat": -13.45, "lon": -76.15, "region": "Coastal", 
      "type": "Afroperuano", "n": 103,
      "notes": "Chincha area, Ica region"},
 ])
@@ -429,7 +429,7 @@ coastal_verts = [
     (-77.0, -11.2),  
     (-76.6, -12.0),  # Include Lima
     (-76.2, -12.8),  
-    (-75.8, -13.2),  # Include Afrodescendants
+    (-75.8, -13.2),  # Include Afrodescendents
     (-75.4, -13.8),  
     (-75.2, -14.4),  
     (-74.6, -15.0),  
@@ -700,7 +700,7 @@ label_config = {
     'Moquegua': {'offset': (1, 0.02), 'ha': 'left'},
     
     # Afroperuvian
-    'Afrodescendants': {'offset': (-1, 0.02), 'ha': 'right'},
+    'Afrodescendents': {'offset': (-1, 0.02), 'ha': 'right'},
 }
 
 for idx, pop in populations.iterrows():

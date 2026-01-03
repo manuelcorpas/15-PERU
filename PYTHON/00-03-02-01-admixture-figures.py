@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
 """
-Fix overlapping labels for small-n Amazonian populations in ADMIXTURE plots.
-Keeps existing population order and colors, but improves label rendering
-with micro-labels and leader lines for small Amazonian populations.
-Also generates CV error curve and identifies optimal K.
+ADMIXTURE plots with improved labels for Nature Health submission.
+
+Modifications from original 00-03-02-01:
+- Meaningful regional ancestry labels for K=5 instead of generic "Ancestry 1-5"
+- Legend with frame and title for K=5 figures
+- Excluded populations with very small sample sizes: Nahua (n=2), Machiguenga (n=3), Ashaninka (n=1)
+- Small Amazonian populations (n<10) have bars displayed but no labels
+  (consistent with manuscript stating 28 populations analysed)
+
+Ancestry labels (K=5):
+  Component 1: African (orange)
+  Component 2: Northern Andean (light blue)
+  Component 3: Amazonian Native (teal)
+  Component 4: European/Coastal (yellow)
+  Component 5: Altiplano Andean (dark blue)
 """
 
 import numpy as np
@@ -49,11 +60,42 @@ SHORT_LABEL_MAP = {
     "HUARAZ": "Huaraz"
 }
 
+# Abbreviated labels for very small populations (n<=3) to reduce crowding
+ABBREVIATED_LABEL_MAP = {
+    "NAHUA": "Nah.",
+    "MACHIGUENGA": "Mach.",
+    "ASHANINKA": "Ash.",
+    "MATZES": "Mats.",
+    "CANDOSHI": "Cand.",
+    "AWAJUN": "Awaj.",
+    "SHIPIBO": "Ship.",
+    "LAMAS": "Lam."
+}
+
 # Fallback Amazonian populations (case-insensitive)
 AMAZONIAN_FALLBACK = {
     'NAHUA', 'MACHIGUENGA', 'ASHANINKA', 'MATSES', 'MATZES', 
     'SHIPIBO', 'CANDOSHI', 'AWAJUN', 'LAMAS', 'IQUITOS'
 }
+
+# Populations to exclude from plots entirely (too small for analysis)
+EXCLUDED_POPULATIONS = {'NAHUA', 'MACHIGUENGA', 'ASHANINKA'}
+
+# Meaningful ancestry labels for K=5 based on population distribution
+# Maps component index to regional/ancestral interpretation
+ANCESTRY_LABELS_K5 = {
+    0: 'African',               # Orange - Afrodescendientes
+    1: 'Northern Andean',       # Light blue - highland populations
+    2: 'Amazonian Native',      # Teal - dominant in Amazonian Indigenous groups
+    3: 'European/Coastal',      # Yellow - admixed coastal/urban populations
+    4: 'Altiplano Andean'       # Dark blue - southern highlands (Puno, Uros, etc.)
+}
+
+def get_ancestry_label(k_index, K):
+    """Return meaningful ancestry label for K=5, generic for other K values."""
+    if K == 5 and k_index in ANCESTRY_LABELS_K5:
+        return ANCESTRY_LABELS_K5[k_index]
+    return f'Ancestry {k_index + 1}'
 
 # Try scipy for component alignment
 try:
@@ -267,9 +309,9 @@ def adjust_overlapping_labels(fig, annotations):
         bbox = ann.get_window_extent(renderer)
         bboxes.append(bbox)
     
-    max_iterations = 10
-    y_increment = 0.02
-    max_y = 1.18
+    max_iterations = 15  # IMPROVED: More iterations
+    y_increment = 0.03   # IMPROVED: Larger vertical adjustment
+    max_y = 1.35         # IMPROVED: Allow labels to go higher
     
     for iteration in range(max_iterations):
         overlap_found = False
@@ -297,13 +339,15 @@ def adjust_overlapping_labels(fig, annotations):
         if not overlap_found:
             break
     
+    # IMPROVED: If still overlapping, reduce font size more aggressively
     if overlap_found:
         for i in range(len(annotations)):
             for j in range(i + 1, len(annotations)):
                 if check_overlap(bboxes[i], bboxes[j]):
-                    current_size = annotations[i].get_fontsize()
-                    annotations[i].set_fontsize(max(6, current_size - 1))
-                    annotations[j].set_fontsize(max(6, current_size - 1))
+                    current_size_i = annotations[i].get_fontsize()
+                    current_size_j = annotations[j].get_fontsize()
+                    annotations[i].set_fontsize(max(5.5, current_size_i - 1.5))
+                    annotations[j].set_fontsize(max(5.5, current_size_j - 1.5))
     
     return annotations
 
@@ -317,7 +361,10 @@ def plot_admixture_with_fixed_labels(Q_matrix, pop_df, K, colors, cv_error, outp
     
     has_region = 'REGION' in pop_df.columns
     
-    Q_df['POP'] = pd.Categorical(Q_df['POP'], categories=pop_order, ordered=True)
+    # Filter out excluded populations (too small for analysis)
+    Q_df = Q_df[~Q_df['POP'].str.upper().isin(EXCLUDED_POPULATIONS)].copy()
+    
+    Q_df['POP'] = pd.Categorical(Q_df['POP'], categories=[p for p in pop_order if p.upper() not in EXCLUDED_POPULATIONS], ordered=True)
     Q_df['max_anc'] = Q_df[[f'Anc_{i+1}' for i in range(K)]].max(axis=1)
     Q_df = Q_df.sort_values(['POP', 'max_anc'], ascending=[True, False])
     
@@ -348,15 +395,22 @@ def plot_admixture_with_fixed_labels(Q_matrix, pop_df, K, colors, cv_error, outp
     micro_annotations = []
     
     current_pos = 0
-    stagger_cycle = [1.04, 1.08, 1.12]
+    # IMPROVED: Wider vertical spacing and more stagger levels to prevent overlap
+    stagger_cycle = [1.05, 1.12, 1.19, 1.26]
     stagger_idx = 0
+    # Track positions of small population labels for horizontal offset
+    small_pop_positions = []
     
     for pop_name, group in pop_groups:
         group_size = len(group)
         center = current_pos + group_size / 2
         count = pop_counts[pop_name]
         
-        short_name = SHORT_LABEL_MAP.get(pop_name, pop_name)
+        # Use abbreviated name for very small populations (n<=3)
+        if count <= 3 and pop_name in ABBREVIATED_LABEL_MAP:
+            short_name = ABBREVIATED_LABEL_MAP[pop_name]
+        else:
+            short_name = SHORT_LABEL_MAP.get(pop_name, pop_name)
         label = f'{short_name}\n(n={count})'
         
         width_pixels = get_block_width_pixels(ax, current_pos, current_pos + group_size, 
@@ -365,27 +419,19 @@ def plot_admixture_with_fixed_labels(Q_matrix, pop_df, K, colors, cv_error, outp
         is_small_amazonian = (pop_name in amazonian_pops and count < 10)
         
         if is_small_amazonian:
-            fontsize = get_adaptive_fontsize(width_pixels)
-            y_offset = stagger_cycle[stagger_idx % len(stagger_cycle)]
+            # MODIFIED: Skip labels for small Amazonian populations (n<10)
+            # These populations are not included in the 28 analysed populations
+            # They still appear in the bars but without labels to avoid overlap
+            small_pop_positions.append(center)
             stagger_idx += 1
-            
-            ann = ax.annotate(label, 
-                            xy=(center, 1.0), 
-                            xycoords=('data', 'axes fraction'),
-                            xytext=(center, y_offset), 
-                            textcoords=('data', 'axes fraction'),
-                            arrowprops=dict(arrowstyle='-', lw=0.6, color='0.35', 
-                                          shrinkA=0, shrinkB=0),
-                            ha='center', va='bottom', fontsize=fontsize)
-            micro_annotations.append(ann)
             
             label_info.append({
                 'POP': pop_name,
                 'n': count,
                 'x_center': center,
-                'y_final': y_offset,
-                'fontsize': fontsize,
-                'stagger_level': (stagger_idx - 1) % len(stagger_cycle) + 1
+                'y_final': None,  # No label
+                'fontsize': None,
+                'stagger_level': 0
             })
         else:
             fontsize = 9 if width_pixels < 30 else (10 if width_pixels < 60 else 11)
@@ -457,10 +503,18 @@ def plot_admixture_with_fixed_labels(Q_matrix, pop_df, K, colors, cv_error, outp
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     
-    legend_elements = [mpatches.Patch(facecolor=colors[i], label=f'Ancestry {i+1}')
+    # Create legend with meaningful labels for K=5, generic for other K
+    legend_elements = [mpatches.Patch(facecolor=colors[i], 
+                                      edgecolor='black' if K == 5 else 'none',
+                                      linewidth=0.5,
+                                      label=get_ancestry_label(i, K))
                       for i in range(K)]
-    ax.legend(handles=legend_elements, loc='center right', bbox_to_anchor=(1.12, 0.5),
-             frameon=False, fontsize=9)
+    legend = ax.legend(handles=legend_elements, loc='center right', bbox_to_anchor=(1.12, 0.5),
+                       frameon=True if K == 5 else False, fontsize=10,
+                       title='Ancestry' if K == 5 else None,
+                       edgecolor='0.8')
+    if K == 5:
+        legend.get_frame().set_linewidth(0.8)
     
     plt.subplots_adjust(bottom=0.20, right=0.85, top=0.92)
     
@@ -497,7 +551,10 @@ def plot_multi_panel_fixed(Q_matrices, pop_df_dict, K_values, colors_dict, cv_er
         
         has_region = 'REGION' in pop_df.columns
         
-        Q_df['POP'] = pd.Categorical(Q_df['POP'], categories=pop_order, ordered=True)
+        # Filter out excluded populations (too small for analysis)
+        Q_df = Q_df[~Q_df['POP'].str.upper().isin(EXCLUDED_POPULATIONS)].copy()
+        
+        Q_df['POP'] = pd.Categorical(Q_df['POP'], categories=[p for p in pop_order if p.upper() not in EXCLUDED_POPULATIONS], ordered=True)
         Q_df['max_anc'] = Q_df[[f'Anc_{i+1}' for i in range(K)]].max(axis=1)
         Q_df = Q_df.sort_values(['POP', 'max_anc'], ascending=[True, False])
         
@@ -526,15 +583,21 @@ def plot_multi_panel_fixed(Q_matrices, pop_df_dict, K_values, colors_dict, cv_er
             micro_annotations = []
             
             current_pos = 0
-            stagger_cycle = [1.04, 1.08, 1.12]
+            # IMPROVED: Wider vertical spacing and more stagger levels
+            stagger_cycle = [1.05, 1.12, 1.19, 1.26]
             stagger_idx = 0
+            small_pop_positions = []
             
             for pop_name, group in pop_groups:
                 group_size = len(group)
                 center = current_pos + group_size / 2
                 count = pop_counts[pop_name]
                 
-                short_name = SHORT_LABEL_MAP.get(pop_name, pop_name)
+                # Use abbreviated name for very small populations (n<=3)
+                if count <= 3 and pop_name in ABBREVIATED_LABEL_MAP:
+                    short_name = ABBREVIATED_LABEL_MAP[pop_name]
+                else:
+                    short_name = SHORT_LABEL_MAP.get(pop_name, pop_name)
                 label = f'{short_name}\n(n={count})'
                 
                 width_pixels = get_block_width_pixels(ax, current_pos, current_pos + group_size,
@@ -543,27 +606,19 @@ def plot_multi_panel_fixed(Q_matrices, pop_df_dict, K_values, colors_dict, cv_er
                 is_small_amazonian = (pop_name in amazonian_pops and count < 10)
                 
                 if is_small_amazonian:
-                    fontsize = get_adaptive_fontsize(width_pixels)
-                    y_offset = stagger_cycle[stagger_idx % len(stagger_cycle)]
+                    # MODIFIED: Skip labels for small Amazonian populations (n<10)
+                    # These populations are not included in the 28 analysed populations
+                    # They still appear in the bars but without labels to avoid overlap
+                    small_pop_positions.append(center)
                     stagger_idx += 1
-                    
-                    ann = ax.annotate(label,
-                                    xy=(center, 1.0),
-                                    xycoords=('data', 'axes fraction'),
-                                    xytext=(center, y_offset),
-                                    textcoords=('data', 'axes fraction'),
-                                    arrowprops=dict(arrowstyle='-', lw=0.6, color='0.35',
-                                                  shrinkA=0, shrinkB=0),
-                                    ha='center', va='bottom', fontsize=fontsize)
-                    micro_annotations.append(ann)
                     
                     label_info.append({
                         'POP': pop_name,
                         'n': count,
                         'x_center': center,
-                        'y_final': y_offset,
-                        'fontsize': fontsize,
-                        'stagger_level': (stagger_idx - 1) % len(stagger_cycle) + 1
+                        'y_final': None,  # No label
+                        'fontsize': None,
+                        'stagger_level': 0
                     })
                 else:
                     fontsize = 9 if width_pixels < 30 else (10 if width_pixels < 60 else 11)
@@ -625,11 +680,17 @@ def plot_multi_panel_fixed(Q_matrices, pop_df_dict, K_values, colors_dict, cv_er
     fig.suptitle(f'ADMIXTURE (n={n_samples}; K={K_values[0]}..{K_values[-1]})',
                 fontsize=14, fontweight='bold', y=0.98)
     
+    # Create legend with meaningful labels for max K (use K=5 labels if max_K=5)
     max_K = max(K_values)
-    legend_elements = [mpatches.Patch(facecolor=colors_dict[max_K][i], label=f'Ancestry {i+1}')
+    legend_elements = [mpatches.Patch(facecolor=colors_dict[max_K][i], 
+                                      edgecolor='black' if max_K == 5 else 'none',
+                                      linewidth=0.5,
+                                      label=get_ancestry_label(i, max_K))
                       for i in range(max_K)]
     fig.legend(handles=legend_elements, loc='center right', bbox_to_anchor=(0.985, 0.5),
-              frameon=False, fontsize=9)
+              frameon=True if max_K == 5 else False, fontsize=10,
+              title='Ancestry' if max_K == 5 else None,
+              edgecolor='0.8')
     
     plt.subplots_adjust(bottom=0.20, right=0.85, top=0.92, hspace=0.12)
     
@@ -825,14 +886,19 @@ def main():
     print("\n" + "=" * 80)
     print("SUMMARY")
     print("=" * 80)
-    print(f"Small Amazonian populations with micro-labels: {len(small_amazonian)}")
-    print(f"Total populations: {len(pop_order)}")
+    print(f"Excluded populations (too small): {EXCLUDED_POPULATIONS}")
+    print(f"Small Amazonian populations (n<10, unlabelled): {len([p for p in small_amazonian if p.upper() not in EXCLUDED_POPULATIONS])}")
+    print(f"Total populations in data: {len(pop_order)}")
+    print(f"Populations in figures: {len(pop_order) - len([p for p in pop_order if p.upper() in EXCLUDED_POPULATIONS])}")
     print(f"K values processed: {available_K}")
     if cv_errors:
         optimal_k = min(cv_errors, key=cv_errors.get)
         print(f"Optimal K: {optimal_k} (CV={cv_errors[optimal_k]:.6f})")
     print(f"Output directory: {output_dir}")
-    print("\nLabel fixes applied successfully!")
+    print("\nAncestry labels used for K=5:")
+    for i, label in ANCESTRY_LABELS_K5.items():
+        print(f"  Component {i+1}: {label}")
+    print("\nFigures generated successfully!")
 
 if __name__ == "__main__":
     main()

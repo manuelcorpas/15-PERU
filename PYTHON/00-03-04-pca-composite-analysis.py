@@ -63,7 +63,7 @@ PERU_POPULATIONS = {
     'JACARUS', 'JAQARUS', 'LAMAS', 'LAMBAYEQUE', 'LIMA', 'MATZES', 'MATSIGUENKAS',
     'MOCHES', 'MOQUEGUA', 'NAHUA', 'PUNO', 'QEROS', 'SHIPIBO_INS',
     'TACNA', 'TALLANES', 'TRUJILLO', 'TUMBES', 'UROS', 'HUARAZ',
-    'AFRODESCENDIENTES'
+    'AFRODESCENDENTS'
 }
 
 # ============================================================================
@@ -85,7 +85,7 @@ AMAZONIAN_POPULATIONS = {
 
 COASTAL_POPULATIONS = {
     'LIMA', 'TRUJILLO', 'MOCHES', 'LAMBAYEQUE', 'TUMBES', 
-    'TALLANES', 'LAMAS', 'TALLAN', 'AFRODESCENDIENTES'
+    'TALLANES', 'LAMAS', 'TALLAN', 'AFRODESCENDENTS'
 }
 
 # Language groups - EXPANDED (Jaqaru is an Aymaran language)
@@ -97,6 +97,32 @@ QUECHUA_POPULATIONS = {
 AYMARA_POPULATIONS = {
     'UROS', 'PUNO', 'JAQARUS', 'JACARUS'  # Jaqaru is Aymaran family
 }
+
+# Population name standardization mapping
+POPULATION_NAME_MAPPING = {
+    'AFRODESCENDIENTES': 'AFRODESCENDENTS',
+    'Afrodescendientes': 'AFRODESCENDENTS',
+    'afrodescendientes': 'AFRODESCENDENTS',
+}
+
+def normalize_population_name(pop_name):
+    """Normalize population names to standard format"""
+    if pop_name is None or pd.isna(pop_name):
+        return pop_name
+    pop_str = str(pop_name).strip()
+    # Check mapping first
+    if pop_str in POPULATION_NAME_MAPPING:
+        return POPULATION_NAME_MAPPING[pop_str]
+    # Also check uppercase version
+    if pop_str.upper() in POPULATION_NAME_MAPPING:
+        return POPULATION_NAME_MAPPING[pop_str.upper()]
+    return pop_str
+
+def normalize_population_column(df, col='POP'):
+    """Apply population name normalization to a DataFrame column"""
+    if col in df.columns:
+        df[col] = df[col].apply(normalize_population_name)
+    return df
 
 def get_region(population):
     """Get region for a population"""
@@ -980,6 +1006,7 @@ def main():
     data_dict = {}
     
     pop_df = load_population_file(pop_file)
+    pop_df = normalize_population_column(pop_df, 'POP')  # Normalize population names
     print(f"  Loaded {len(pop_df)} samples from Peru population file")
     if 'POP' in pop_df.columns:
         print(f"  Found {pop_df['POP'].nunique()} unique Peru populations")
@@ -996,6 +1023,7 @@ def main():
         data_dict['peru_data'] = peru_pca.merge(
             pop_df[['IID', 'POP']], on='IID', how='left'
         )
+        data_dict['peru_data'] = normalize_population_column(data_dict['peru_data'], 'POP')
         print(f"  Peru PCA: {len(data_dict['peru_data'])} samples, "
               f"{data_dict['peru_data']['POP'].nunique()} populations")
     else:
@@ -1009,6 +1037,7 @@ def main():
         data_dict['common_data'] = common_pca.merge(
             pop_df[['IID', 'POP']], on='IID', how='left'
         )
+        data_dict['common_data'] = normalize_population_column(data_dict['common_data'], 'POP')
         print(f"  Common PCA: {len(data_dict['common_data'])} samples")
     else:
         data_dict['common_data'] = data_dict.get('peru_data', pd.DataFrame()).copy()
@@ -1036,6 +1065,7 @@ def main():
             data_dict['sgdp_peru'] = data_dict['sgdp_peru'].merge(
                 pop_df[['IID', 'POP']], on='IID', how='left'
             )
+            data_dict['sgdp_peru'] = normalize_population_column(data_dict['sgdp_peru'], 'POP')
             
             data_dict['sgdp_other'] = sgdp_pca[~is_peru].copy()
             print(f"    Split: {len(data_dict['sgdp_peru'])} Peru, {len(data_dict['sgdp_other'])} SGDP samples")
@@ -1046,6 +1076,7 @@ def main():
                 data_dict['sgdp_other'], 
                 sgdp_pop_file
             )
+            data_dict['sgdp_other'] = normalize_population_column(data_dict['sgdp_other'], 'POP')
             
             if diagnostics['total_sgdp'] > 0:
                 final_match_rate = 100 * (diagnostics['direct_matches'] + diagnostics['fallback_matches']) / diagnostics['total_sgdp']
