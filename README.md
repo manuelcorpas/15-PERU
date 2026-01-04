@@ -1,108 +1,279 @@
+# Peruvian Genome Project: Scripts Documentation
 
+**Manuscript**: *Genomic Insights into 30 Peruvian Indigenous and Mestizo Populations*
 
-# Scripts Documentation for the Paper:
-**Genome Interpretation of Peruvian Inca Empire Descendants Reveals Actionable Insights**
-
-In our manuscript, we describe multiple analyses on whole-genome sequencing (WGS) and SNP array data from 30 Peruvian populations. The Python scripts in `PYTHON/` were pivotal for generating the results, figures, and tables appearing in the paper. Below, we outline each script’s role and where its outputs appear in the manuscript.
-
-## 1. Genetic Diversity and SNP Analysis
-
-### 00-01-00-gen-div.py
-- **Purpose in the Paper**: Computes general genetic diversity metrics (e.g., heterozygosity, allele richness) used in the *“Whole-Genome Mutational Landscape”* and *“Genetic Diversity and Structure”* sections.  
-- **Relevant Figures/Results**: Contributed to summary statistics of biallelic SNPs across populations, described in the text near *Figure 2* (SNP distributions) and *Table 1* (SNV counts).
-
-### 00-01-01-snp-counts.py
-- **Purpose in the Paper**: Tallies SNPs per sample or population, providing the raw counts featured in the *“Whole-Genome Mutational Landscape”* subsection.  
-- **Relevant Figures/Results**: Underlies *Figure 2A*, which presents the boxplot of SNP counts per individual.
-
-### 00-01-02-plot-snp-boxplots.py
-- **Purpose in the Paper**: Generates boxplots of SNP distribution, helping visualize how many variants each individual harbors.  
-- **Relevant Figures/Results**: Directly used to create the boxplot shown in *Figure 2A*, illustrating how certain populations (e.g., Uros, Matzes) have fewer SNPs compared to more admixed groups.
-
-### 00-01-03-pairwise-snp-tests.py
-- **Purpose in the Paper**: Performs statistical comparisons (e.g., t-tests, ANOVA) across populations to detect significant differences in SNP counts.  
-- **Relevant Figures/Results**: Though not highlighted in a standalone figure, its p-values and effect sizes support statements in the *“Whole-Genome Mutational Landscape”* discussing variation among populations.
-
-### 00-01-04-private-variant-count.py
-- **Purpose in the Paper**: Identifies private (population-specific) variants in each group. This analysis informed the text about unique bottlenecks and founder effects.  
-- **Relevant Figures/Results**: Ties into *Figure 2B* (bar chart of private variants per population). Also referenced in the *“High-Impact Variant Discovery”* section when discussing population-specific alleles.
-
-### 00-01-05-visualise-private-var-count.py
-- **Purpose in the Paper**: Produces plots (barplots/boxplots) of private variant counts.  
-- **Relevant Figures/Results**: Contributed to the final version of *Figure 2B*, which highlights how certain groups (e.g., Trujillo, Cusco) contain higher unique variant counts than more isolated populations (e.g., Matzes).
+This repository contains Python scripts for analysing whole-genome sequencing (WGS) and SNP array data from 30 Peruvian populations (n = 736 unrelated individuals after quality control). The analyses support population genetics, pharmacogenomics, and variant discovery findings reported in the manuscript.
 
 ---
 
-## 2. VCF Annotation and Zygosity
+## Table of Contents
 
-### 00-03-annotate-vcf-zygosity.py
-- **Purpose in the Paper**: Annotates each variant with zygosity (homozygous/heterozygous), supporting the *“Whole-Genome Mutational Landscape”* methods.  
-- **Relevant Figures/Results**: Used internally during data preparation (not visualized directly as a figure), but essential to the final curated dataset described in *“Online Methods – Variant Calling and Quality Control.”*
-
----
-
-## 3. PharmCAT Pipeline
-
-### 00-04-00-pharmcat-pipeline.py
-- **Purpose in the Paper**: Runs PharmCAT on multiple WGS or VCF files, generating `.report.html` outputs used for pharmacogenomic profiling.  
-- **Relevant Figures/Results**: Feeds into the *“Pharmacogenomic Analysis”* section. Data here were ultimately referenced in *Figure 3* (FDA recommendations per population).
-
-### 00-04-01-parse-pharmcat-results.py
-- **Purpose in the Paper**: Reads the PharmCAT `.report.html` files, extracting gene-allele-phenotype information.  
-- **Relevant Figures/Results**: The summarized gene-phenotype tables appear in the *“Pharmacogenomic Analysis”* subsection, helping to quantify how frequently certain metabolizer statuses occur (e.g., poor metabolizers in CYP2C19).
+1. [Project Overview](#project-overview)
+2. [Directory Structure](#directory-structure)
+3. [Script Documentation](#script-documentation)
+   - [00-01: Genetic Diversity and SNP Analysis](#00-01-genetic-diversity-and-snp-analysis)
+   - [00-02: VCF Annotation](#00-02-vcf-annotation)
+   - [00-03: Population Structure](#00-03-population-structure)
+   - [00-04: Pharmacogenomics](#00-04-pharmacogenomics)
+   - [00-05: gnomAD Validation](#00-05-gnomad-validation)
+   - [00-06: Variant Annotation and Statistics](#00-06-variant-annotation-and-statistics)
+   - [00-07: Figure Generation](#00-07-figure-generation)
+4. [Dependencies](#dependencies)
+5. [Reproducibility](#reproducibility)
 
 ---
 
-## 4. PyPGx and FDA PGx Integration
+## Project Overview
 
-### 00-05-00-run-pypgx.py
-- **Purpose in the Paper**: Launches PyPGx to compute star-allele haplotypes, diplotypes, and predicted metabolizer phenotypes.  
-- **Relevant Figures/Results**: Key for *“Pharmacogenomic Analysis.”* The outputs assisted in identifying clinically actionable variants (e.g., in CYP2C19, CYP2D6) discussed in *Figure 3* and text.
+This project analyses genomic data from 30 Peruvian populations representing Peru's three ecological regions:
+- **Coastal**: Tumbes, Trujillo, Lima, Arequipa, Moquegua, Tacna, Lambayeque
+- **Highland (Andean)**: Cusco, Ayacucho, Huaraz, Puno, Chopccas, Chachapoyas, Jaqarus, Queros, Uros
+- **Amazonian**: Matzes, Machiguenga, Ashaninka, Awajun, Shipibo, Candoshi, Nahua, Lamas, Iquitos
 
-### 00-05-01-compile-pypgx-results.py
-- **Purpose in the Paper**: Aggregates multiple PyPGx result files into a single summary table of genotype-phenotype calls.  
-- **Relevant Figures/Results**: Facilitated cross-population comparisons in the *“Pharmacogenomic Analysis”* section, where differences in metabolizer status among the seven main populations were noted.
+Plus one Afro-Peruvian population (AFRODESCENDENTS) sampled from Chincha province.
 
-### 00-05-02-00-match-fda-recommendation.py
-- **Purpose in the Paper**: Matches local genotypes/diplotypes to official FDA-labeled pharmacogenetic recommendations, highlighting potential dosing or warning flags.  
-- **Relevant Figures/Results**: Populates the data seen in *Figure 3*, where each population’s gene–drug match count is displayed (e.g., “CYP2C19–clopidogrel poor metabolizer”).
-
-### 00-05-02-01-parse-fda-pgx-assoc.py
-- **Purpose in the Paper**: Parses FDA’s official pharmacogenomic tables or guidelines to create an internal reference for drug-gene associations.  
-- **Relevant Figures/Results**: Used in combination with the above script to generate the *FDA Recommendation Mapping* dataset behind *Figure 3*.
-
-### 00-05-02-02-visualise-fda-pgx-assoc.py
-- **Purpose in the Paper**: Produces charts illustrating how many relevant gene–drug associations are triggered in each population.  
-- **Relevant Figures/Results**: Directly creates the bar chart of FDA guidelines (shown in *Figure 3*), illustrating that certain subgroups have disproportionately high risk of drug–gene interactions.
+**Sample sizes**:
+- Initial recruitment: 1,149 individuals
+- After quality control and kinship filtering: 736 unrelated individuals
+- WGS samples: 150 (109 after kinship filtering)
+- Array-genotyped samples: 873 (627 after kinship filtering)
 
 ---
 
-## 5. Genotype Frequencies by Gene
+## Directory Structure
 
-### 00-05-03-genotype-freq-by-gene.py
-- **Purpose in the Paper**: Calculates genotype frequencies for each gene across the study cohort.  
-- **Relevant Figures/Results**: Supports the text discussing population-level differences in allele and genotype frequency (e.g., *“Genetic Diversity and Structure”* and part of *“Pharmacogenomic Analysis”*).
-
-### 00-05-04-plot-predicted-pheno-by-gene.py
-- **Purpose in the Paper**: Visualizes predicted phenotypes (e.g., poor/intermediate metabolizer) by gene across individuals.  
-- **Relevant Figures/Results**: Could be adapted for supplementary figures illustrating distribution of metabolizer statuses or used to cross-check main text statements about prevalence.
-
-### 00-05-05-genotype-freq-by-gene-and-population.py
-- **Purpose in the Paper**: Extends the above script to show genotype frequencies *per population,* capturing how certain groups have unique allele distributions.  
-- **Relevant Figures/Results**: Underpins statements about how “coastal mestizos” vs. “Andean highlanders” differ in genotype frequencies, further supporting *Figure 4A–C* on genetic structure and *Figure 3* on PGx differences.
+```
+HEINNER-GUIO/
+├── PYTHON/
+│   ├── ARCHIVE/                    # Deprecated scripts
+│   ├── 00-01-*.py                  # Genetic diversity analyses
+│   ├── 00-02-*.py                  # VCF annotation
+│   ├── 00-03-*.py                  # Population structure (IBD, ADMIXTURE, PCA, Fst, f3)
+│   ├── 00-04-*.py                  # Pharmacogenomics (PyPGx)
+│   ├── 00-05-*.py                  # gnomAD validation
+│   ├── 00-06-*.py                  # Variant annotation and statistics
+│   └── 00-07-*.py                  # Figure generation
+│
+├── ANALYSIS/
+│   ├── 00-00-00-DEMOGRAPHICS/      # Sample metadata
+│   ├── 00-00-WGS-STATS/            # WGS quality metrics
+│   ├── 00-01-GEN-DIV/              # Genetic diversity outputs
+│   ├── 00-05-PyPGx/                # Pharmacogenomics results
+│   ├── 00-06-IBD/                  # Identity-by-descent analysis
+│   ├── 00-07-ADMIXTURE/            # Ancestry estimation
+│   ├── 00-08-PCA/                  # Principal component analysis
+│   ├── 00-09-FST/                  # Fst differentiation
+│   ├── 00-10-GNOMAD-CHECK/         # gnomAD validation
+│   ├── 00-11-GNOMAD-NOVEL/         # Novel variant verification
+│   ├── 00-12-PGX-STATS/            # Pharmacogenomics statistics
+│   ├── 00-13-DSTATS/               # Outgroup f3 statistics
+│   └── 00-17-FIGURE1/              # Main figure outputs
+│
+└── DATA/                           # Input data (not included)
+```
 
 ---
 
-## How These Scripts Integrate with the Paper
+## Script Documentation
 
-1. **Whole-Genome and SNP Analysis**:  
-   Scripts `00-01-xx` create the variant count data and plots featured in *Figure 2* (SNP distribution and private variants).  
-2. **PharmCAT & PyPGx**:  
-   Scripts `00-04-xx` and `00-05-xx` drive the pharmacogenomic pipeline, parsing `.report.html` files (PharmCAT) and star-allele calls (PyPGx). Results feed into *Figure 3* (FDA recommendations) and text.  
-3. **Population Genetics**:  
-   Zygosity annotation (`00-03-annotate-vcf-zygosity.py`) and genotype frequencies (`00-05-03` through `00-05-05`) help characterize each group’s genomic profile, linking to PCA-based discussions (*Figure 4*) and high-impact variants (*Table 1*).
+### 00-01: Genetic Diversity and SNP Analysis
 
-These scripts collectively underpin the manuscript’s core findings: the discovery of novel/rare variants, the identification of actionable pharmacogenomic markers, and the characterization of genetic structure in Peruvian populations. By integrating them with complementary tools (GATK, PLINK, VEP, etc.), we provide a reproducible framework for analyzing large genomic datasets and highlighting clinical implications for underserved communities.
+Scripts for computing variant counts, heterozygosity, and population-specific metrics.
 
+| Script | Purpose | Output | Figure/Table |
+|--------|---------|--------|--------------|
+| `00-01-00-gen-div.py` | Computes genetic diversity metrics (heterozygosity, allele richness) per population | Summary statistics | Table 1, Figure 2 |
+| `00-01-01-snp-counts.py` | Tallies SNPs per sample and population | Count matrices | Figure 2A |
+| `00-01-02-plot-snp-boxplots.py` | Generates boxplots of SNP distribution across populations | PNG/PDF figures | Figure 2A |
+| `00-01-03-pairwise-snp-tests.py` | Statistical comparisons (t-tests, ANOVA) of SNP counts between populations | p-values, effect sizes | Results text |
+| `00-01-04-private-variant-count.py` | Identifies population-specific (private) variants | Variant lists | Figure 2B |
+| `00-01-05-visualise-private-var-count.py` | Visualises private variant counts as bar charts | PNG/PDF figures | Figure 2B |
+| `00-01-06-wgs-qc-metrics.py` | Calculates WGS quality control metrics (depth, Ti/Tv ratio, call rates) | QC summary table | Suppl. Table S1, Methods |
 
+**Key findings**: Uros and Matzes show reduced heterozygosity consistent with demographic isolation; Ti/Tv ratio of 2.09 confirms high-quality variant calls.
 
+---
+
+### 00-02: VCF Annotation
+
+| Script | Purpose | Output | Figure/Table |
+|--------|---------|--------|--------------|
+| `00-02-annotate-vcf-zygosity.py` | Annotates variants with zygosity status (homozygous/heterozygous) | Annotated VCF | Methods |
+
+---
+
+### 00-03: Population Structure
+
+Scripts for IBD filtering, ancestry estimation, PCA, and population differentiation.
+
+| Script | Purpose | Output | Figure/Table |
+|--------|---------|--------|--------------|
+| `00-03-00-common-variants-array-wgs.py` | Identifies overlapping variants between WGS and array platforms | Merged dataset (936,301 SNPs) | Methods |
+| `00-03-01-remove-duplicates-IBD.py` | Removes duplicate/related samples using IBD (PI_HAT > 0.95) | 736 unrelated individuals | Table 2, Methods |
+| `00-03-02-00-admixture-analysis.py` | Runs unsupervised ADMIXTURE for K=2-14 | Q matrices, CV errors | Figure 4, Suppl. Fig. S4 |
+| `00-03-02-01-admixture-figures.py` | Generates ADMIXTURE bar plots and cross-validation plots | PNG/PDF figures | Figure 4, Suppl. Fig. S4 |
+| `00-03-03-common-vars-peru-sdgp.py` | Merges Peruvian data with SGDP reference panel | Joint dataset for global PCA | Figure 3D |
+| `00-03-04-pca-composite-analysis.py` | Performs PCA with regional/linguistic annotations | Multi-panel PCA figure | Figure 3A-D |
+| `00-03-05-fst-pairwise-analysis.py` | Computes pairwise Weir & Cockerham Fst for all 28 populations | Fst matrix, heatmap, dendrogram | Suppl. Fig. S5 |
+| `00-03-06-dstats-analysis.py` | Calculates outgroup f3 statistics using AFRODESCENDENTS as outgroup | f3 matrix, heatmap, dendrogram | Suppl. Fig. S6 |
+
+**Key findings**:
+- ADMIXTURE K=5 resolves Amazonian, Andean-Altiplano, other Andean, coastal/European-admixed, and African-enriched components
+- PCA explains 51.5% (PC1), 9.4% (PC2), 6.7% (PC3) of variance
+- Mean Fst = 0.014 (range 0.001-0.089); AFRODESCENDENTS most differentiated
+- f3 statistics reveal tri-regional clustering: Amazonian (highest shared drift) → Highland → Coastal (lowest)
+
+---
+
+### 00-04: Pharmacogenomics
+
+Scripts for star-allele calling and clinical interpretation using PyPGx.
+
+| Script | Purpose | Output | Figure/Table |
+|--------|---------|--------|--------------|
+| `00-04-00-run-pypgx.py` | Runs PyPGx pipeline on all 736 samples across 56 pharmacogenes | Diplotypes, phenotypes | Figure 5, Methods |
+| `00-04-01-integrated-pgx-figures.py` | Generates integrated pharmacogenomics figures (phenotype frequencies, FDA triggers, heatmaps) | Multi-panel Figure 5 | Figure 5A-C |
+| `00-04-02-pgx-clinical-interpretation.py` | Maps genotypes to FDA recommendations and clinical guidelines | Drug-gene associations | Figure 5B, Results |
+
+**Key findings**:
+- CYP2C19 poor metaboliser frequency elevated in Indigenous populations
+- CYP3A5 expresser status higher in Amazonian groups
+- FDA guidelines may have limited applicability to Indigenous Peruvian populations
+
+---
+
+### 00-05: gnomAD Validation
+
+Scripts for verifying novel variant claims against gnomAD.
+
+| Script | Purpose | Output | Figure/Table |
+|--------|---------|--------|--------------|
+| `00-05-00-gnomad-filtered-check.py` | Verifies high-impact variants against gnomAD v4.1 including filtered variants | Validation report | Results text, R1.3 response |
+
+**Key findings**: 94% of novel variants (1,536,198 of 1,638,862) confirmed absent from gnomAD v2.1.1.
+
+---
+
+### 00-06: Variant Annotation and Statistics
+
+Scripts for gnomAD annotation and statistical testing.
+
+| Script | Purpose | Output | Figure/Table |
+|--------|---------|--------|--------------|
+| `00-06-00-gnomad-download.py` | Downloads gnomAD reference files | Reference data | Methods |
+| `00-06-01-gnomad-annotate.py` | Annotates variants with gnomAD allele frequencies | Annotated VCF | Table 1 |
+| `00-06-00-02-gnomad-novel-crossref.py` | Cross-references novel variants with gnomAD and dbSNP | Novel variant counts | Table 1, Results |
+| `00-06-01-pgx-statistical-tests.py` | Statistical comparisons of pharmacogenomic phenotypes between populations | Chi-square tests, p-values | Results text |
+
+---
+
+### 00-07: Figure Generation
+
+Scripts for generating publication-ready figures.
+
+| Script | Purpose | Output | Figure/Table |
+|--------|---------|--------|--------------|
+| `00-07-00-figure1-map-w-admixture-k5.py` | Creates Figure 1 map with sampling locations, regional shading, and ADMIXTURE K=5 pie charts | Figure 1B | Figure 1 |
+
+**Features**:
+- Geographic map of Peru with ecological region shading (Coastal, Highland, Amazonian)
+- ADMIXTURE K=5 ancestry pie charts at each sampling location
+- Circle size proportional to sample size
+- South American inset map for context
+
+---
+
+## Dependencies
+
+### Python (3.11+)
+
+```
+numpy
+pandas
+matplotlib
+seaborn
+scipy
+geopandas
+tqdm
+```
+
+### External Tools
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| PLINK | 1.9 / 2.0 | Genotype QC, IBD, Fst |
+| ADMIXTURE | 1.3.0 | Ancestry estimation |
+| PyPGx | latest | Pharmacogenomics |
+| bcftools | 1.17+ | VCF manipulation |
+| VEP | 110 | Variant effect prediction |
+
+### Reference Data
+
+- gnomAD v2.1.1 (GRCh37)
+- dbSNP (build 155)
+- SGDP reference panel
+- PharmVar database
+
+---
+
+## Reproducibility
+
+### Hardware
+
+All analyses were performed on:
+- **Mac Studio M3 Ultra** (32 cores, 256 GB RAM)
+- macOS Sonoma
+
+Scripts are optimised for parallel processing (typically 28 workers).
+
+### Reference Genome
+
+GRCh37 (hg19) was retained for:
+1. Compatibility with PyPGx and PharmVar database coordinates
+2. Consistency with 1000 Genomes Phase 3 reference panels
+3. Direct comparison with previous Peruvian Genome Project publications
+4. Avoiding liftover errors in complex pharmacogene regions (e.g., CYP2D6)
+
+### Running the Pipeline
+
+```bash
+# 1. Genetic diversity
+python3.11 00-01-00-gen-div.py
+python3.11 00-01-01-snp-counts.py
+python3.11 00-01-02-plot-snp-boxplots.py
+
+# 2. Population structure
+python3.11 00-03-01-remove-duplicates-IBD.py
+python3.11 00-03-02-00-admixture-analysis.py
+python3.11 00-03-04-pca-composite-analysis.py
+python3.11 00-03-05-fst-pairwise-analysis.py
+python3.11 00-03-06-dstats-analysis.py
+
+# 3. Pharmacogenomics
+python3.11 00-04-00-run-pypgx.py
+python3.11 00-04-01-integrated-pgx-figures.py
+
+# 4. Figure generation
+python3.11 00-07-00-figure1-map-w-admixture-k5.py
+```
+
+---
+
+## Citation
+
+If you use these scripts or data, please cite:
+
+> Corpas M, Guio H, et al. (2026). Genomic Insights into 30 Peruvian Indigenous and Mestizo Populations. *Nature Human Behaviour* (in revision).
+
+---
+
+## Contact
+
+- **Manuel Corpas** - Corresponding author
+- **Heinner Guio** - Corresponding author
+
+---
+
+## License
+
+This project is licensed under [LICENSE] - see the LICENSE file for details.
